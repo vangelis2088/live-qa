@@ -8,6 +8,8 @@ wheels/
 
 qa.db
 
+.playwright-mcp/
+
 # Virtual environments
 .venv
 .env
