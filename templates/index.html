@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Live Q&amp;A</title>
+  <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 40rem; margin: 2rem auto; padding: 0 1rem; }
+    form { display: grid; gap: 0.5rem; margin-bottom: 2rem; }
+    textarea { min-height: 4rem; }
+    ul { list-style: none; padding: 0; }
+    li { border-bottom: 1px solid #ddd; padding: 0.75rem 0; }
+    .meta { color: #666; font-size: 0.85rem; }
+  </style>
+</head>
+<body>
+  <h1>Live Q&amp;A</h1>
+  <form hx-post="/questions" hx-target="#questions" hx-swap="innerHTML"
+        hx-on::after-request="if (event.detail.successful) this.reset()">
+    <textarea name="text" required maxlength="{{ max_text_len }}"
+              placeholder="Ask a question ({{ max_text_len }} chars max)"></textarea>
+    <input name="author" maxlength="{{ max_author_len }}" placeholder="Your name (optional)">
+    <button type="submit">Ask</button>
+  </form>
+  <div id="questions" hx-get="/questions" hx-trigger="every 3s" hx-swap="innerHTML">
+    {% include "_questions.html" %}
+  </div>
+</body>
+</html>

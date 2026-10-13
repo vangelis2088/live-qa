@@ -1,0 +1,15 @@
+{% if questions %}
+<ul>
+  {% for q in questions %}
+  <li>
+    <div>{{ q.text | safe }}</div>
+    <div class="meta">
+      {{ q.author or "Anonymous" }} · {{ q.votes }} votes ·
+      <time datetime="{{ q.created_at }}">{{ q.created_at }}</time>
+    </div>
+  </li>
+  {% endfor %}
+</ul>
+{% else %}
+<p>No questions yet. Be the first to ask!</p>
+{% endif %}
