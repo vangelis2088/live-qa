@@ -50,3 +50,21 @@ def list_questions() -> list[dict]:
             """
         ).fetchall()
     return [dict(row) for row in rows]
+
+
+def upvote_question(question_id: int) -> bool:
+    """Add one vote to a question; return False if it does not exist."""
+    with closing(connect()) as conn, conn:
+        cur = conn.execute(
+            "UPDATE questions SET votes = votes + 1 WHERE id = ?", (question_id,)
+        )
+        return cur.rowcount > 0
+
+
+def question_exists(question_id: int) -> bool:
+    """Return True if a question with this id exists."""
+    with closing(connect()) as conn:
+        row = conn.execute(
+            "SELECT 1 FROM questions WHERE id = ?", (question_id,)
+        ).fetchone()
+    return row is not None

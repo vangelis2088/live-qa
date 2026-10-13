@@ -18,6 +18,24 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Live Q&A", lifespan=lifespan)
 
+VOTED_COOKIE = "voted"
+VOTED_COOKIE_MAX_AGE = 60 * 60 * 24 * 365
+
+
+def voted_ids(request: Request) -> set[int]:
+    raw = request.cookies.get(VOTED_COOKIE, "")
+    return {int(part) for part in raw.split(".") if part.isdigit()}
+
+
+def render_questions(request: Request, voted: set[int] | None = None):
+    if voted is None:
+        voted = voted_ids(request)
+    return templates.TemplateResponse(
+        request,
+        "_questions.html",
+        {"questions": db.list_questions(), "voted": voted},
+    )
+
 
 @app.get("/health")
 def health():
@@ -31,6 +49,7 @@ def index(request: Request):
         "index.html",
         {
             "questions": db.list_questions(),
+            "voted": voted_ids(request),
             "max_text_len": db.MAX_TEXT_LEN,
             "max_author_len": db.MAX_AUTHOR_LEN,
         },
@@ -39,9 +58,7 @@ def index(request: Request):
 
 @app.get("/questions", response_class=HTMLResponse)
 def questions_partial(request: Request):
-    return templates.TemplateResponse(
-        request, "_questions.html", {"questions": db.list_questions()}
-    )
+    return render_questions(request)
 
 
 @app.post("/questions", response_class=HTMLResponse)
@@ -59,4 +76,25 @@ def create_question(request: Request, text: str = Form(""), author: str = Form("
             f"Name must be at most {db.MAX_AUTHOR_LEN} characters.", status_code=422
         )
     db.create_question(text, author or None)
-    return questions_partial(request)
+    return render_questions(request)
+
+
+@app.post("/questions/{question_id}/upvote", response_class=HTMLResponse)
+def upvote_question(request: Request, question_id: int):
+    voted = voted_ids(request)
+    if question_id in voted:
+        if not db.question_exists(question_id):
+            return HTMLResponse("Question not found.", status_code=404)
+        return render_questions(request, voted)
+    if not db.upvote_question(question_id):
+        return HTMLResponse("Question not found.", status_code=404)
+    voted.add(question_id)
+    response = render_questions(request, voted)
+    response.set_cookie(
+        VOTED_COOKIE,
+        ".".join(str(i) for i in sorted(voted)),
+        max_age=VOTED_COOKIE_MAX_AGE,
+        httponly=True,
+        samesite="lax",
+    )
+    return response

@@ -2,10 +2,17 @@
 <ul>
   {% for q in questions %}
   <li>
-    <div>{{ q.text | safe }}</div>
-    <div class="meta">
-      {{ q.author or "Anonymous" }} · {{ q.votes }} votes ·
-      <time datetime="{{ q.created_at }}">{{ q.created_at }}</time>
+    <div class="question">
+      <button class="upvote" hx-post="/questions/{{ q.id }}/upvote"
+              hx-target="#questions" hx-swap="innerHTML"
+              aria-label="Upvote"{% if q.id in voted %} disabled{% endif %}>▲ {{ q.votes }}</button>
+      <div>
+        <div>{{ q.text }}</div>
+        <div class="meta">
+          {{ q.author or "Anonymous" }} ·
+          <time datetime="{{ q.created_at }}">{{ q.created_at }}</time>
+        </div>
+      </div>
     </div>
   </li>
   {% endfor %}

@@ -41,3 +41,19 @@ def test_votes_take_precedence_over_age():
     db.create_question("new", None)
     set_votes(popular, 5)
     assert [q["text"] for q in db.list_questions()] == ["popular", "new", "old"]
+
+
+def test_upvote_question():
+    qid = db.create_question("Hello?", None)
+    assert db.upvote_question(qid) is True
+    assert db.list_questions()[0]["votes"] == 1
+
+
+def test_upvote_missing_question():
+    assert db.upvote_question(999) is False
+
+
+def test_question_exists():
+    qid = db.create_question("Hello?", None)
+    assert db.question_exists(qid) is True
+    assert db.question_exists(999) is False
