@@ -46,3 +46,5 @@ uv run ruff format .                      # format
 - Do not add dependencies without asking me first.
 - Never read or modify `.env`.
 - Run tests and ruff before saying a task is done.
+- Edit files only with the Edit/Write tools, never with sed, redirects or other shell commands.
+- Never delete or weaken existing tests without asking me first.

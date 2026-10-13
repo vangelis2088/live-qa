@@ -10,3 +10,4 @@ qa.db
 
 # Virtual environments
 .venv
+.env
