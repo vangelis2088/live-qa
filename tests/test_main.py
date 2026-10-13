@@ -1,4 +1,5 @@
 import pytest
+from markupsafe import escape
 
 from app import db
 
@@ -119,3 +120,18 @@ def test_upvote_ignores_malformed_cookie(client):
     r = client.post(f"/questions/{qid}/upvote")
     assert r.status_code == 200
     assert db.list_questions()[0]["votes"] == 1
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        '<img src=x onerror="alert(1)">',
+        '<div hx-post="/questions/1/upvote" hx-trigger="every 1s">x</div>',
+    ],
+)
+def test_question_html_is_escaped_in_page_and_partial(client, payload):
+    client.post("/questions", data={"text": payload})
+    for path in ("/", "/questions"):
+        body = client.get(path).text
+        assert payload not in body
+        assert str(escape(payload)) in body
