@@ -1,8 +1,10 @@
 {% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
 <ul>
   {% for t in topics %}
-  <li>
-    {{ t.title }}
+  <li{% if t.voted %} class="voted"{% endif %}>
+    <button type="button" hx-post="/topics/{{ t.id }}/vote" hx-target="#topics" hx-swap="innerHTML"{% if t.voted %} disabled{% endif %}>{{ "Voted" if t.voted else "Vote" }}</button>
+    <span class="count">{{ t.votes }}</span>
+    {{ t.title | safe }}
     {% if t.source == 'organizer' %}<span class="badge">Organizer's pick</span>{% endif %}
     {% if t.author %}<small>— {{ t.author }}</small>{% endif %}
   </li>

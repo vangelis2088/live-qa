@@ -29,7 +29,38 @@ def init_db() -> None:
             "CREATE UNIQUE INDEX IF NOT EXISTS ux_topics_organizer_title "
             "ON topics(title) WHERE source = 'organizer'"
         )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS votes (
+                id INTEGER PRIMARY KEY,
+                voter_id TEXT NOT NULL UNIQUE,
+                topic_id INTEGER NOT NULL REFERENCES topics(id),
+                created_at TEXT NOT NULL
+                    DEFAULT (strftime('%Y-%m-%dT%H:%M:%f', 'now'))
+            )
+            """
+        )
     conn.close()
+
+
+def cast_vote(voter_id: str, topic_id: int) -> bool:
+    """Set the voter's single vote to topic_id; False if the topic doesn't exist."""
+    conn = get_conn()
+    try:
+        with conn:
+            if not conn.execute(
+                "SELECT 1 FROM topics WHERE id = ?", (topic_id,)
+            ).fetchone():
+                return False
+            conn.execute(
+                "INSERT INTO votes (voter_id, topic_id) VALUES (?, ?) "
+                "ON CONFLICT(voter_id) DO UPDATE SET topic_id = excluded.topic_id "
+                "WHERE votes.topic_id != excluded.topic_id",
+                (voter_id, topic_id),
+            )
+        return True
+    finally:
+        conn.close()
 
 
 def add_topic(title: str, author: str | None, source: str) -> None:
@@ -41,12 +72,19 @@ def add_topic(title: str, author: str | None, source: str) -> None:
     conn.close()
 
 
-def list_topics() -> list[sqlite3.Row]:
+def list_topics(voter_id: str | None = None) -> list[sqlite3.Row]:
     conn = get_conn()
     try:
         return conn.execute(
-            "SELECT id, title, author, source, created_at FROM topics "
-            "ORDER BY created_at DESC, id DESC"
+            """
+            SELECT t.id, t.title, t.author, t.source, t.created_at,
+                   (SELECT COUNT(*) FROM votes v WHERE v.topic_id = t.id) AS votes,
+                   EXISTS(SELECT 1 FROM votes v
+                          WHERE v.topic_id = t.id AND v.voter_id = ?) AS voted
+            FROM topics t
+            ORDER BY votes DESC, t.created_at DESC, t.id DESC
+            """,
+            (voter_id or "",),
         ).fetchall()
     finally:
         conn.close()
