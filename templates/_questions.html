@@ -1,17 +1,39 @@
+<style>
+  li.answered { opacity: 0.5; }
+  li.answered .question-text { text-decoration: line-through; }
+  .badge { font-size: 0.75rem; border: 1px solid currentColor; border-radius: 0.25rem; padding: 0 0.25rem; }
+  .mod-actions { display: flex; gap: 0.5rem; margin-top: 0.5rem; }
+</style>
 {% if questions %}
 <ul>
   {% for q in questions %}
-  <li>
+  <li{% if q.answered %} class="answered"{% endif %}>
     <div class="question">
+      {% if moderator %}
+      <span class="upvote" aria-label="Votes">▲ {{ q.votes }}</span>
+      {% else %}
       <button class="upvote" hx-post="/questions/{{ q.id }}/upvote"
               hx-target="#questions" hx-swap="innerHTML"
               aria-label="Upvote"{% if q.id in voted %} disabled{% endif %}>▲ {{ q.votes }}</button>
+      {% endif %}
       <div>
-        <div>{{ q.text }}</div>
+        <div class="question-text">{{ q.text }}</div>
         <div class="meta">
           {{ q.author or "Anonymous" }} ·
           <time datetime="{{ q.created_at }}">{{ q.created_at }}</time>
+          {% if q.answered %}· <span class="badge">Answered</span>{% endif %}
         </div>
+        {% if moderator %}
+        <div class="mod-actions">
+          {% if not q.answered %}
+          <button hx-post="/moderate/questions/{{ q.id }}/answered"
+                  hx-target="#questions" hx-swap="innerHTML">Mark answered</button>
+          {% endif %}
+          <button hx-delete="/moderate/questions/{{ q.id }}"
+                  hx-target="#questions" hx-swap="innerHTML"
+                  hx-confirm="Delete this question?">Delete</button>
+        </div>
+        {% endif %}
       </div>
     </div>
   </li>

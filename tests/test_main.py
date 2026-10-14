@@ -135,3 +135,11 @@ def test_question_html_is_escaped_in_page_and_partial(client, payload):
         body = client.get(path).text
         assert payload not in body
         assert str(escape(payload)) in body
+
+
+def test_routers_are_wired_into_app(client, monkeypatch):
+    monkeypatch.setenv("ADMIN_PASSWORD", "correct-horse-battery")
+    assert client.get("/export.md").status_code == 200
+    assert client.get("/moderate").status_code == 401
+    ok = client.get("/moderate", auth=("admin", "correct-horse-battery"))
+    assert ok.status_code == 200

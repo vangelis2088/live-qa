@@ -6,6 +6,8 @@ from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
 from app import db
+from app.export import router as export_router
+from app.moderation import router as moderation_router
 
 templates = Jinja2Templates(directory=Path(__file__).parent.parent / "templates")
 
@@ -17,6 +19,8 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="Live Q&A", lifespan=lifespan)
+app.include_router(moderation_router)
+app.include_router(export_router)
 
 VOTED_COOKIE = "voted"
 VOTED_COOKIE_MAX_AGE = 60 * 60 * 24 * 365

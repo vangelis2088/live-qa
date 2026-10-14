@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="same-origin">
+  <title>Moderate · Live Q&amp;A</title>
+  <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 40rem; margin: 2rem auto; padding: 0 1rem; }
+    button { font: inherit; font-size: 1rem; padding: 0.5rem 0.75rem; min-height: 2.75rem; box-sizing: border-box; }
+    ul { list-style: none; padding: 0; }
+    li { border-bottom: 1px solid #ddd; padding: 0.75rem 0; }
+    .meta { color: #666; font-size: 0.85rem; }
+    .question { display: flex; gap: 0.75rem; align-items: flex-start; }
+    .question > div { min-width: 0; overflow-wrap: anywhere; }
+    .upvote { min-width: 3.5rem; flex-shrink: 0; padding-top: 0.5rem; }
+  </style>
+</head>
+<body>
+  <h1>Moderate questions</h1>
+  <p><a href="/">Back to audience view</a></p>
+  <div id="questions" hx-get="/moderate/questions" hx-trigger="every 3s" hx-swap="innerHTML">
+    {% include "_questions.html" %}
+  </div>
+</body>
+</html>
